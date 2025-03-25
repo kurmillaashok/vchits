@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>V Chits Payment Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border: 1px solid #ddd;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 5px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select, button, textarea {
+      padding: 8px;
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .notification {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+    }
+    .export-options {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1><i><b>V Chits Payment Tracker</b></i> (20 Months)</h1>
+  
+  <!-- Admin Login Section -->
+  <div id="adminLoginSection">
+    <h2>Admin Login</h2>
+    <div class="form-group">
+      <label for="adminPassword">Password:</label>
+      <input type="password" id="adminPassword" placeholder="Enter password">
+    </div>
+    <button id="adminLoginBtn">Login</button>
+    <div id="loginMsg" class="error"></div>
+  </div>
+
+  <!-- Admin Panel (hidden until login) -->
+  <div id="adminPanel" class="hidden">
+    <h2>Admin Panel</h2>
+    
+    <!-- Payment Status Update Form (using drop-down for Name and Month) -->
+    <h3>Update Payment Status</h3>
+    <div class="form-group">
+      <label for="updateName">Name:</label>
+      <select id="updateName">
+        <!-- Options will be populated dynamically -->
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="updateMonth">Select Month:</label>
+      <select id="updateMonth">
+        <!-- Month options will be populated dynamically -->
+      </select>
+    </div>
+    <button id="updateStatusBtn">Mark as Paid</button>
+    <button id="markUnpaidBtn">Mark as Unpaid</button>
+    <div id="updateMsg"></div>
+
+    <!-- Notify Section -->
+    <h3>Send Payment Reminder</h3>
+    <div class="form-group">
+      <label for="notifyMonth">Select Month to Notify:</label>
+      <select id="notifyMonth">
+        <!-- Month options will be populated dynamically -->
+      </select>
+    </div>
+    <button id="notifyBtn">Notify Non-Payers</button>
+    <div id="notifyMsg" class="notification"></div>
+    
+    <!-- Export Data Section -->
+    <h3>Export Data</h3>
+    <div class="export-options">
+      <button id="downloadBtn">Download Data as CSV</button>
+      <button id="exportBtn">Export Data via Gmail</button>
+      <!-- <button id="resetBtn">Reset Data</button> -->
+    </div>
+    <div id="exportMsg" class="notification"></div>
+    
+    <!-- Refresh Table Button -->
+    <div class="export-options">
+      <button id="refreshBtn">Refresh Table</button>
+    </div>
+
+    <!-- Payment Table (displaying only Name, Phone, and monthly statuses) -->
+    <h3>Payment Status Table</h3>
+    <table id="paymentTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <!-- Month headers will be inserted here -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Table rows will be populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Month labels from Nov 2024 to Jun 2026 (20 months)
+  const monthLabels = [
+    "Nov 2024", "Dec 2024", "Jan 2025", "Feb 2025", "Mar 2025",
+    "Apr 2025", "May 2025", "Jun 2025", "Jul 2025", "Aug 2025",
+    "Sep 2025", "Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026",
+    "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026"
+  ];
+
+  // If URL parameter "reset=true" is present, clear localStorage.
+  const urlParams = new URLSearchParams(window.location.search);
+ // if(urlParams.get('reset') === 'true'){
+ //   localStorage.removeItem('paxData');
+ // }
+
+  // Function to initialize default data with 20 unique names and phone numbers.
+  function initializeData() {
+    const defaultData = [
+      { id: 1,  name: 'ashok',         phone: '+918125907519', payments: Array(20).fill(false) },
+      { id: 2,  name: 'aaa',           phone: '+918125907520', payments: Array(20).fill(false) },
+      { id: 3,  name: 'ask',           phone: '+918125907521', payments: Array(20).fill(false) },
+      { id: 4,  name: 'ashjok',        phone: '+918125907522', payments: Array(20).fill(false) },
+      { id: 5,  name: 'ashyok',        phone: '+918125907523', payments: Array(20).fill(false) },
+      { id: 6,  name: 'ayyshok',       phone: '+918125907524', payments: Array(20).fill(false) },
+      { id: 7,  name: 'asyhok',        phone: '+918125907525', payments: Array(20).fill(false) },
+      { id: 8,  name: 'ashyok2',       phone: '+918125907526', payments: Array(20).fill(false) },
+      { id: 9,  name: 'ashuok',        phone: '+918125907527', payments: Array(20).fill(false) },
+      { id: 10, name: 'ashrok',        phone: '+918125907528', payments: Array(20).fill(false) },
+      { id: 11, name: 'ashosk',        phone: '+918125907529', payments: Array(20).fill(false) },
+      { id: 12, name: 'ashokg',        phone: '+918125907530', payments: Array(20).fill(false) },
+      { id: 13, name: 'ashokaphone',   phone: '+918125907531', payments: Array(20).fill(false) },
+      { id: 14, name: 'ashoki',        phone: '+918125907532', payments: Array(20).fill(false) },
+      { id: 15, name: 'ashokq',        phone: '+918125907533', payments: Array(20).fill(false) },
+      { id: 16, name: 'ashoke',        phone: '+918125907534', payments: Array(20).fill(false) },
+      { id: 17, name: 'ashokw',        phone: '+918125907535', payments: Array(20).fill(false) },
+      { id: 18, name: 'ashokm',        phone: '+918125907536', payments: Array(20).fill(false) },
+      { id: 19, name: 'ashokb',        phone: '+918125907537', payments: Array(20).fill(false) },
+      { id: 20, name: 'ashoka',        phone: '+91970104695', payments: Array(20).fill(false) }
+    ];
+    localStorage.setItem('paxData', JSON.stringify(defaultData));
+    return defaultData;
+  }
+
+  // Load data from localStorage or initialize if not present.
+  function loadData() {
+    const data = localStorage.getItem('paxData');
+    if (data) {
+      return JSON.parse(data);
+    } else {
+      return initializeData();
+    }
+  }
+
+  function saveData(data) {
+    localStorage.setItem('paxData', JSON.stringify(data));
+  }
+
+  // Load data on startup.
+  let paxData = loadData();
+
+  // Function to populate the user name drop-down for the update form.
+  function populateUserDropdown() {
+    const select = document.getElementById('updateName');
+    select.innerHTML = "";
+    paxData.forEach(person => {
+      const option = document.createElement('option');
+      option.value = person.name;
+      option.textContent = person.name;
+      select.appendChild(option);
+    });
+  }
+
+  // Function to populate month drop-downs using monthLabels.
+  function populateMonthDropdown(selectId) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = "";
+    monthLabels.forEach((label, index) => {
+      const option = document.createElement('option');
+      option.value = index + 1; // month index 1-20
+      option.textContent = label;
+      select.appendChild(option);
+    });
+  }
+
+  // Populate the drop-downs on startup.
+  populateUserDropdown();
+  populateMonthDropdown('updateMonth');
+  populateMonthDropdown('notifyMonth');
+
+  // Render the payment table with headers as monthLabels.
+  function renderTable() {
+    const tbody = document.querySelector('#paymentTable tbody');
+    tbody.innerHTML = '';
+    paxData.forEach(person => {
+      let row = '<tr>';
+      row += `<td>${person.name}</td>`;
+      row += `<td>${person.phone}</td>`;
+      person.payments.forEach(status => {
+        row += `<td>${status ? 'Paid' : 'Pending'}</td>`;
+      });
+      row += '</tr>';
+      tbody.innerHTML += row;
+    });
+  }
+
+  renderTable();
+
+  // Admin login functionality.
+  const adminPassword = "admin123";
+  document.getElementById('adminLoginBtn').addEventListener('click', function() {
+    const entered = document.getElementById('adminPassword').value.trim();
+    if (entered === adminPassword) {
+      document.getElementById('adminPanel').classList.remove('hidden');
+      document.getElementById('adminLoginSection').classList.add('hidden');
+    } else {
+      document.getElementById('loginMsg').textContent = "Incorrect password. Try again.";
+    }
+  });
+
+  // Update payment status (mark as Paid) using the selected user's name.
+  document.getElementById('updateStatusBtn').addEventListener('click', function() {
+    const nameInput = document.getElementById('updateName').value.trim().toLowerCase();
+    const month = parseInt(document.getElementById('updateMonth').value, 10);
+    const updateMsg = document.getElementById('updateMsg');
+
+    if (!nameInput || !month || month < 1 || month > 20) {
+      updateMsg.textContent = "Please select a valid name and month.";
+      return;
+    }
+    const person = paxData.find(p => p.name.toLowerCase() === nameInput);
+    if (person) {
+      person.payments[month - 1] = true;
+      updateMsg.textContent = `Payment for ${monthLabels[month - 1]} updated as PAID for ${person.name}.`;
+      saveData(paxData);
+      renderTable();
+    } else {
+      updateMsg.textContent = "User not found. Please check the name.";
+    }
+  });
+
+  // Mark payment status as Unpaid using the selected user's name.
+  document.getElementById('markUnpaidBtn').addEventListener('click', function() {
+    const nameInput = document.getElementById('updateName').value.trim().toLowerCase();
+    const month = parseInt(document.getElementById('updateMonth').value, 10);
+    const updateMsg = document.getElementById('updateMsg');
+
+    if (!nameInput || !month || month < 1 || month > 20) {
+      updateMsg.textContent = "Please select a valid name and month.";
+      return;
+    }
+    const person = paxData.find(p => p.name.toLowerCase() === nameInput);
+    if (person) {
+      person.payments[month - 1] = false;
+      updateMsg.textContent = `Payment for ${monthLabels[month - 1]} updated as UNPAID for ${person.name}.`;
+      saveData(paxData);
+      renderTable();
+    } else {
+      updateMsg.textContent = "User not found. Please check the name.";
+    }
+  });
+
+  // Notify non-payers for a selected month via SMS deep links.
+  document.getElementById('notifyBtn').addEventListener('click', function() {
+    const month = parseInt(document.getElementById('notifyMonth').value, 10);
+    const notifyMsg = document.getElementById('notifyMsg');
+    if (!month || month < 1 || month > 20) {
+      notifyMsg.textContent = "Please select a valid month to notify.";
+      return;
+    }
+    
+    const nonPayers = paxData.filter(person => person.payments[month - 1] === false);
+    if (nonPayers.length === 0) {
+      notifyMsg.innerHTML = `<p>All persons have paid for ${monthLabels[month - 1]}.</p>`;
+    } else {
+      let message = `<p>Click a link below to send SMS reminder for ${monthLabels[month - 1]}:</p><ul>`;
+      nonPayers.forEach(person => {
+        const smsLink = `sms:${person.phone}?body=` + encodeURIComponent(`Gentle Reminder from V Chits!
+Dear valuable customer ${person.name}, kindly pay your dues for ${monthLabels[month - 1]}.`);
+        message += `<li>${person.name} (${person.phone}) - <a href="${smsLink}" target="_blank">Send SMS</a></li>`;
+      });
+      message += '</ul>';
+      notifyMsg.innerHTML = message;
+    }
+  });
+
+  // Export data via Gmail: open mailto link with the JSON data.
+  document.getElementById('exportBtn').addEventListener('click', function() {
+    const exportMsg = document.getElementById('exportMsg');
+    const data = localStorage.getItem('paxData');
+    if (!data) {
+      exportMsg.textContent = "No data found to export.";
+      return;
+    }
+    const subject = encodeURIComponent("Payment Tracker Data Export");
+    const body = encodeURIComponent("Here is the exported data:\n\n" + data);
+    const mailtoLink = `mailto:your-email@gmail.com?subject=${subject}&body=${body}`;
+    exportMsg.innerHTML = `<p>Click <a href="${mailtoLink}">here</a> to send the exported data via email.</p>`;
+  });
+
+  // Download data as CSV (exclude the ID column).
+  document.getElementById('downloadBtn').addEventListener('click', function() {
+    let csv = "Name,Phone";
+    monthLabels.forEach(label => {
+      csv += `,${label}`;
+    });
+    csv += "\n";
+    paxData.forEach(person => {
+      let row = `${person.name},${person.phone}`;
+      person.payments.forEach(status => {
+        row += `,${status ? "Paid" : "Pending"}`;
+      });
+      csv += row + "\n";
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "payment_data.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  // Refresh Table Button: reload data and re-render table.
+  document.getElementById('refreshBtn').addEventListener('click', function() {
+    paxData = loadData();
+    renderTable();
+    populateUserDropdown();
+  });
+</script>
+</body>
+</html>
